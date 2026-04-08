@@ -1,0 +1,109 @@
+# vps-hosting
+
+1. linux_setup_configuration:
+file name: vi setup.sh (ctrl+shift+v diye  file ta paste korbo, esc press and write :wq for save the file, press-> ls for seeing the file, run the file--> bash setup.sh, do you want to change default shell to zsh:y dibo, complete hole -> exit type dibo)
+
+2. git_user_setup.sh:
+file name: vi git.sh --> bash git.sh(q/a--> Github.com,HTTPS,Yes,login with a web browser)
+press enter--> github.com/login/device
+one time code:
+SMTech24-official->continue
+press enter: email--> github@smtech24.com, github username
+
+3. folder create--
+mkdir /var/www-->create
+cd /var/www--> folder er moddhe
+www pwd --> file er path
+www git clone https...
+www cd project_name-->cd ..
+www clear
+
+4. nginx deployment conf.d
+www cd
+pwd  (/root - e thakte hobe)
+vi deploy.sh-->(ctrl+shift+v paste it )--> :wq for save --> run korar jonno -->bash deploy.sh
+
+backend port:
+domain name(http thaka jabe na)
+email jekono(official dile better)
+
+5. 
+nginx create hoyeche ta dekhar jonno-->cd /etc/nginx/conf.d
+conf.d ls
+conf.d cat file_name  --> dekhar jonno
+conf.d cd /var/www
+www ls
+www cd file name
+ls
+
+pnpm i &&pnpm prisma generate && pnpm build && pm2 restart ecosystem.config.js && systemctl restart nginx 
+
+pnpm i && pnpm build && pm2 restart ecosystem.config.js && systemctl restart nginx 
+
+pm2 restart ecosystem.config.js && systemctl restart nginx
+
+pm2 logs number_dao
+//error hole--> pnpm add uuid
+//error hole
+sudo ufw status
+sudo systemctl restart nginx
+➜  ~ sudo ufw allow 13002
+npm install -g pnpm
+
+
+bcrypt error: npm rebuild bcrypt and again pnpm i ....
+
+abar root e jete hobe frontend krte hole:
+www cd --> bash deploy.sh
+frontend port:
+domain,email
+
+6. frontnd run
+cd /var/www
+www ls
+www cd file_name
+prisma drkr nai frontend e
+
+jodi ecosystem na thake
+
+vi ecosystem.config.js file name diye pastre kore save korbo. 
+then pnpm i .. chalabo and prisma chara
+
+for not secure issue: sudo certbot -d domain_name -d www.domain_name
+
+7. local db te mongodb er jonno jodi krte chai
+
+mongod.sh--> root -e  korbo
+cd
+vi mongod.sh paste kore save kore
+:wq
+.env te gia url change kora 
+
+8. extra command: example
+ls
+cd /var/www/justin_prunzik_server
+www ls
+www sudo rm -rf justin_prunzik_server
+www git clone https://github.com/SMTech24-official/justin_prunzik_server.git 
+pnpm add ws
+pnpm add -D @types/ws
+sudo ssh-keygen -t ed25519 -C "vm-access"
+
+Generating public/private ed25519 key pair.
+Enter file in which to save the key (/root/.ssh/id_ed25519):
+Enter passphrase (empty for no passphrase):
+Enter same passphrase again:
+Your identification has been saved in /root/.ssh/id_ed25519
+Your public key has been saved in /root/.ssh/id_ed25519.pub
+The key fingerprint is:
+SHA256:NjipCHjuSOm9zYXFawREA433/tfBJF5kxUe2ZF5xdKw vm-access
+The key's randomart image is:
+➜  justin_prunzik_server git:(main) ✗ cd ~/.ssh
+➜  .ssh ls
+authorized_keys  id_ed25519  id_ed25519.pub
+➜  .ssh sudo cat id_ed25519.pub
+ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAICidrPhE/sfxJ+5nvS9wK8rzZyeBoy5NcQ1x2g7P5SSf vm-access
+➜  .ssh
+
+zsh error, (zsh not found)
+source ~/.zshrc
