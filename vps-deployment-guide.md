@@ -854,6 +854,14 @@ module.exports = {
 
 ---
 
+
+## 🌐 Check Configured Domains / Server Names in Nginx
+
+```bash
+# Check all configured domains and server_name entries in Nginx
+sudo nginx -T | grep server_name
+```
+
 ## 📊 Quick Reference - VPS Info
 
 | Item | Value |
