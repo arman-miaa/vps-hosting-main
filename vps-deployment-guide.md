@@ -1,10 +1,7 @@
-
----
-
 # 🚀 VPS Hosting Full Deployment Guide
 
 > **Author:** Arman Mia  
-> **Last Updated:** 25 April 2026  
+> **Last Updated:** 07 May 2026  
 > **Stack:** Node.js, Express, Next.js, MongoDB, PM2, Nginx, SSL  
 
 ---
@@ -21,6 +18,8 @@
 8. [Extra Commands](#8-extra-commands)
 9. [Ecosystem Config Files](#9-ecosystem-files)
 10. [Troubleshooting](#10-troubleshooting)
+11. [Nginx Management Commands](#11-nginx-management)
+12. [Essential VPS Commands](#12-essential-vps-commands)
 
 ---
 
@@ -132,13 +131,53 @@ echo "Setup completed."
 
 ---
 
+Right! I'll update Section 2 with both SSH key method and GitHub CLI method. Here's the updated version:
+
+---
+
 ## 2. GitHub Setup
 
 **Script File:** `git.sh` / `git_user_setup.sh`
 
 **Purpose:** Install GitHub CLI, authenticate GitHub account, configure Git credentials
 
-### 📝 Step by Step
+### 🔑 Method 1: SSH Key Authentication (Recommended for VPS)
+
+```bash
+# Step 1: Generate SSH key
+ssh-keygen -t ed25519 -C "your-email@example.com"
+# Press Enter for default location (~/.ssh/id_ed25519)
+# Enter passphrase (optional, leave empty for no passphrase)
+
+# Step 2: Start SSH agent
+eval "$(ssh-agent -s)"
+
+# Step 3: Add SSH key to agent
+ssh-add ~/.ssh/id_ed25519
+
+# Step 4: Display public key (copy this)
+cat ~/.ssh/id_ed25519.pub
+
+# Step 5: Add SSH key to GitHub
+# Visit: https://github.com/settings/keys
+# Click "New SSH Key"
+# Title: "VPS Server - $(hostname)" 
+# Key type: Authentication Key
+# Paste your public key → Click "Add SSH Key"
+
+# Step 6: Test SSH connection
+ssh -T git@github.com
+# Expected: "Hi your-username! You've successfully authenticated..."
+
+# Step 7: Configure Git
+git config --global user.email "your-email@example.com"
+git config --global user.name "Your Name"
+
+# Step 8: Clone using SSH (no password needed!)
+git clone git@github.com:username/repository.git
+```
+
+### 🔐 Method 2: GitHub CLI (HTTPS with Browser Login)
 
 ```bash
 # Step 1: Create the git file
@@ -168,10 +207,10 @@ bash git.sh
 
 | Question | Answer |
 |:---|:---|
-| Your GitHub email: | `github@smtech24.com` |
+| Your GitHub email: | `your-email@example.com` |
 | Your GitHub username: | `Your GitHub Username` |
 
-### 📄 Complete Script
+### 📄 Complete Script (Method 2 - GitHub CLI)
 
 <details>
 <summary>Click to expand - git.sh</summary>
@@ -203,8 +242,55 @@ git config --global user.name "$name"
 ```
 </details>
 
----
+### 🆚 SSH vs HTTPS Comparison
 
+| Feature | SSH Key | HTTPS (GitHub CLI) |
+|:---|:---|:---|
+| **Authentication** | SSH key pair (no password) | Browser login + token |
+| **Setup Time** | 5 min (one-time) | 2 min |
+| **Security** | 🔒 More secure | ✅ Good |
+| **Private Repos** | ✅ Works seamlessly | ✅ Works |
+| **Clone Command** | `git clone git@github.com:user/repo.git` | `git clone https://github.com/user/repo.git` |
+| **VPS Friendly** | ⭐ Best choice | Works |
+| **No Browser Needed** | ✅ Yes | ❌ Needs browser |
+| **Expiry** | Never expires | Token expires |
+
+### 🔧 Switch Between SSH and HTTPS
+
+```bash
+# Check current remote URL
+git remote -v
+
+# Switch from HTTPS to SSH
+git remote set-url origin git@github.com:username/repository.git
+
+# Switch from SSH to HTTPS
+git remote set-url origin https://github.com/username/repository.git
+
+# Verify change
+git remote -v
+```
+
+### 🛠️ Troubleshooting SSH
+
+```bash
+# Permission denied (publickey)
+# Ensure your public key is added to GitHub
+cat ~/.ssh/id_ed25519.pub
+# Check at: https://github.com/settings/keys
+
+# Bad permissions error
+chmod 700 ~/.ssh
+chmod 600 ~/.ssh/id_ed25519
+chmod 644 ~/.ssh/id_ed25519.pub
+
+# SSH agent not running
+eval "$(ssh-agent -s)"
+ssh-add ~/.ssh/id_ed25519
+
+# Test connection with verbose output
+ssh -vT git@github.com
+```
 ## 3. Project Setup
 
 **Purpose:** Create project folder, clone repositories
@@ -278,6 +364,9 @@ bash deploy.sh
 cd /etc/nginx/conf.d
 ls
 cat your-domain.conf
+
+# Check configured domains/server names
+sudo nginx -T | grep server_name
 
 # Check project folder
 cd /var/www
@@ -487,6 +576,10 @@ if ! crontab -l | grep -q 'certbot renew'; then
     log_info "Adding daily certbot renew cron job..."
     (crontab -l 2>/dev/null; echo "0 3 * * * certbot renew --quiet") | crontab -
 fi
+
+# --- Show Configured Domains ---
+log_info "Configured domains/server names:"
+sudo nginx -T | grep server_name
 
 log_info "Deployment complete! Your site is live at https://$DOMAIN"
 if $DRY_RUN; then
@@ -851,16 +944,249 @@ module.exports = {
 | **ZSH not found** | `source ~/.zshrc` |
 | **GitHub clone failed** | Use `gh repo clone user/repo` for private repos |
 | **MongoDB connection failed** | `systemctl status mongod` check if running |
+| **Nginx config error** | `sudo nginx -t && sudo nginx -T \| grep server_name` |
+| **SSL certificate expired** | `sudo certbot renew --dry-run` |
 
 ---
 
+## 11. Nginx Management
 
-## 🌐 Check Configured Domains / Server Names in Nginx
+### 🔍 Check & Debug
 
 ```bash
-# Check all configured domains and server_name entries in Nginx
+# Check configured domains/server names in Nginx
 sudo nginx -T | grep server_name
+
+# Test Nginx configuration for syntax errors
+sudo nginx -t
+
+# Show all Nginx configurations
+sudo nginx -T
+
+# Check which sites are enabled
+ls -la /etc/nginx/sites-enabled/
+
+# Check conf.d directory
+ls -la /etc/nginx/conf.d/
+
+# View specific domain config
+cat /etc/nginx/conf.d/your-domain.conf
 ```
+
+### 🔄 Reload & Restart
+
+```bash
+# Graceful reload (no downtime)
+sudo nginx -s reload
+
+# Restart Nginx
+sudo systemctl restart nginx
+
+# Check Nginx status
+sudo systemctl status nginx
+
+# Start Nginx (if stopped)
+sudo systemctl start nginx
+
+# Stop Nginx
+sudo systemctl stop nginx
+```
+
+### 📜 Logs
+
+```bash
+# View Nginx access logs
+sudo tail -f /var/log/nginx/access.log
+
+# View Nginx error logs
+sudo tail -f /var/log/nginx/error.log
+
+# View specific domain logs (if configured)
+sudo tail -f /var/log/nginx/your-domain-access.log
+```
+
+### 🗑️ Remove Domain
+
+```bash
+# Remove domain config
+sudo rm /etc/nginx/conf.d/your-domain.conf
+
+# Remove SSL certificate
+sudo certbot delete --cert-name your-domain.com
+
+# Reload Nginx
+sudo nginx -s reload
+```
+
+---
+
+## 12. Essential VPS Commands
+
+### 🖥️ System Info
+
+```bash
+# OS version
+lsb_release -a
+cat /etc/os-release
+
+# Kernel version
+uname -r
+
+# CPU info
+lscpu
+nproc
+
+# Memory usage
+free -h
+
+# Disk usage
+df -h
+df -h --total
+
+# Current user
+whoami
+
+# System uptime
+uptime
+```
+
+### 📂 Directory & File
+
+```bash
+# Current directory
+pwd
+
+# Create directory with parents
+mkdir -p /var/www/my-project
+
+# Find files by name
+find / -name "filename" 2>/dev/null
+
+# Find files larger than 100MB
+find / -type f -size +100M 2>/dev/null
+
+# Count files in directory
+ls -l | wc -l
+
+# Check directory size
+du -sh /var/www
+```
+
+### 🔍 Process Management
+
+```bash
+# List running processes
+ps aux
+
+# Find process by name
+ps aux | grep node
+
+# Kill process by PID
+kill -9 <PID>
+
+# Kill all node processes
+pkill node
+
+# Check port usage
+lsof -i :3001
+netstat -tulpn | grep :3001
+
+# Top processes
+htop
+top
+```
+
+### 🗜️ Compression & Transfer
+
+```bash
+# Create tar.gz archive
+tar -czvf archive.tar.gz /var/www/project
+
+# Extract tar.gz archive
+tar -xzvf archive.tar.gz
+
+# Copy file between servers
+scp file.txt root@server_ip:/path/to/destination
+
+# Download file from URL
+wget https://example.com/file.zip
+curl -O https://example.com/file.zip
+```
+
+### 👥 User Management
+
+```bash
+# Create new user
+sudo adduser username
+
+# Add user to sudo group
+sudo usermod -aG sudo username
+
+# Switch user
+su - username
+
+# Change file ownership
+sudo chown -R user:group /var/www
+
+# Change file permissions
+sudo chmod +x script.sh
+sudo chmod 755 file.sh
+```
+
+### 🌐 Network
+
+```bash
+# Check IP address
+curl ifconfig.me
+ip addr show
+
+# Check DNS resolution
+dig your-domain.com
+nslookup your-domain.com
+
+# Ping domain
+ping -c 4 google.com
+
+# Check SSL certificate
+openssl s_client -connect your-domain.com:443 -servername your-domain.com
+
+# Test port connectivity
+nc -zv localhost 3001
+```
+
+### 🔐 PM2 Quick Reference
+
+```bash
+# List all PM2 apps
+pm2 list
+
+# Start app
+pm2 start ecosystem.config.js
+
+# Restart specific app
+pm2 restart 0
+pm2 restart app-name
+
+# Stop app
+pm2 stop app-name
+
+# Delete app
+pm2 delete app-name
+
+# Save PM2 config
+pm2 save
+
+# PM2 startup (auto-start on reboot)
+pm2 startup
+
+# Monitor
+pm2 monit
+
+# Flush logs
+pm2 flush
+```
+
+---
 
 ## 📊 Quick Reference - VPS Info
 
@@ -894,10 +1220,8 @@ sudo nginx -T | grep server_name
 
 ---
 
-> 💡 **Pro Tip:** Always check `ufw status` after deploying new services to ensure ports are open.
+> 💡 **Pro Tip:** Always check `ufw status` and `sudo nginx -T | grep server_name` after deploying new services to ensure proper configuration.
 
 ---
 
 **© 2026 Arman Mia. All rights reserved.**
-
----
