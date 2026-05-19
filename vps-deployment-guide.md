@@ -903,7 +903,46 @@ echo "mongodb://localhost:27017/?replicaSet=rs0"
 
 ---
 
+### 🔐 MongoDB Security (Important for Production)
+
+After installing MongoDB, enable authentication:
+
+```bash
+# 1. Enable authentication in mongod.conf
+sudo nano /etc/mongod.conf
+# Add:
+security:
+  authorization: enabled
+
+# 2. Restart MongoDB
+sudo systemctl restart mongod
+
+# 3. Create admin user
+mongosh
+use admin
+db.createUser({
+  user: "adminUser",
+  pwd: "StrongPassword123",
+  roles: [ { role: "root", db: "admin" } ]
+})
+
+# 4. Create app user
+use your-database-name
+db.createUser({
+  user: "appUser",
+  pwd: "AppPassword123",
+  roles: [ { role: "readWrite", db: "your-database-name" } ]
+})
+
+# 5. Update .env
+DATABASE_URL="mongodb://appUser:AppPassword123@localhost:27017/your-db-name?authSource=admin&replicaSet=rs0"
+```
+
+---
+
 ## 8. Extra Commands
+
+
 
 ### 📁 File Operations
 
