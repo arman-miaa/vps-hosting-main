@@ -587,8 +587,106 @@ if $DRY_RUN; then
 fi
 ```
 </details>
+---
+
+## **এই অংশটি Section 4-এর পরে যোগ করুন:**
+
+### **📌 Alternative: No Domain (IP-based Deployment)**
+
+If you don't have a domain yet, use this single Nginx config:
+
+```bash
+# Create config file manually
+cat > /etc/nginx/conf.d/default.conf <<EOF
+server {
+    listen 80;
+    server_name YOUR_SERVER_IP;
+    
+    # Frontend (Next.js/React) - port 3000
+    location / {
+        proxy_pass http://127.0.0.1:3000;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade \$http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host \$host;
+        proxy_cache_bypass \$http_upgrade;
+    }
+    
+    # Backend (Express API) - port 5000
+    location /api/ {
+        proxy_pass http://127.0.0.1:5000;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade \$http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host \$host;
+        proxy_cache_bypass \$http_upgrade;
+    }
+}
+EOF
+
+# Reload Nginx
+nginx -t && nginx -s reload
+```
 
 ---
+
+### **📌 Adding Domain Later (After IP-based deployment)**
+
+When you buy a domain, follow these steps:
+
+```bash
+# 1. Add DNS records
+# example.com → YOUR_SERVER_IP
+# api.example.com → YOUR_SERVER_IP
+
+# 2. Create domain configs (without SSL first)
+cat > /etc/nginx/conf.d/example.com.conf <<EOF
+server {
+    listen 80;
+    server_name example.com www.example.com;
+    location / {
+        proxy_pass http://127.0.0.1:3000;
+    }
+}
+EOF
+
+cat > /etc/nginx/conf.d/api.example.com.conf <<EOF
+server {
+    listen 80;
+    server_name api.example.com;
+    location / {
+        proxy_pass http://127.0.0.1:5000;
+    }
+}
+EOF
+
+# 3. Reload Nginx
+nginx -t && nginx -s reload
+
+# 4. Add SSL certificates
+certbot --nginx -d example.com -d www.example.com
+certbot --nginx -d api.example.com
+
+# 5. (Optional) Remove IP-based config
+rm /etc/nginx/conf.d/default.conf
+nginx -s reload
+```
+
+---
+
+### **📌 Quick Reference Table (Section 4-এর শেষে যোগ করুন):**
+
+| Scenario | Nginx Config | Command |
+|:---|:---|:---|
+| **No domain (IP only)** | 1 file (`default.conf`) | Manual config (see above) |
+| **One domain (main)** | 1 file (`example.com.conf`) | `bash deploy.sh` |
+| **Two domains (main + api)** | 2 files (`example.com.conf` + `api.example.com.conf`) | `bash deploy.sh` (twice) |
+| **Add domain later** | Create new config files | Manual + `certbot` |
+| **Frontend only** | 1 file (main domain) | `bash deploy.sh` (port 3000) |
+| **Backend only** | 1 file (api subdomain) | `bash deploy.sh` (port 5000) |
+
+---
+
 
 ## 5. Deploy Commands
 
